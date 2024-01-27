@@ -1,0 +1,322 @@
+[
+    {
+        "name": "Demon",
+        "colour": "R",
+        "prime": 11,
+        "follow": 9,
+        "points": -2,
+        "scaling": ["G+4","R+1"]
+    },
+    {
+        "name": "Peasant",
+        "colour": "G",
+        "prime": 2,
+        "follow": 1,
+        "points": 1,
+        "scaling": []
+    },
+    {
+        "name": "Fire Dragon",
+        "colour": "R",
+        "prime": 9,
+        "follow": 7,
+        "points": 3,
+        "scaling": ["G+3"]
+    },
+    {
+        "name": "Hydra",
+        "colour": "R",
+        "prime": 9,
+        "follow": 6,
+        "points": 3,
+        "scaling": ["R+1","G+2","B+3"]
+    },
+    {
+        "name": "Nature",
+        "colour": "G",
+        "prime": 1,
+        "follow": 1,
+        "points": 1,
+        "scaling": ["B+8"]
+    },
+    {
+        "name": "Bombman",
+        "colour": "R",
+        "prime": 6,
+        "follow": 1,
+        "points": -2,
+        "scaling": ["G+2"]
+    },
+    {
+        "name": "Angel",
+        "colour": "B",
+        "prime": 3,
+        "follow": 2,
+        "points": 5,
+        "scaling": ["R+4"]
+    },
+    {
+        "name": "Giant",
+        "colour": "G",
+        "prime": 10,
+        "follow": 6,
+        "points": 1,
+        "scaling": ["B+2"]
+    },
+    {
+        "name": "Thief",
+        "colour": "G",
+        "prime": 3,
+        "follow": 1,
+        "points": -2,
+        "scaling": ["B+1","R+1"]
+    },
+    {
+        "name": "Undead Swarm",
+        "colour": "R",
+        "prime": 6,
+        "follow": 5,
+        "points": -1,
+        "scaling": ["G+4"]
+    },
+    {
+        "name": "Swordsman",
+        "colour": "G",
+        "prime": 4,
+        "follow": 2,
+        "points": 1,
+        "scaling": ["R+1"]
+    },
+    {
+        "name": "Kraken",
+        "colour": "B",
+        "prime": 11,
+        "follow": 7,
+        "points": 4,
+        "scaling": ["R+4","B+3"]
+    },
+    {
+        "name": "Basilisk",
+        "colour": "R",
+        "prime": 10,
+        "follow": 5,
+        "points": 3,
+        "scaling": ["G+4","R+2"]
+    },
+    {
+        "name": "Golem",
+        "colour": "G",
+        "prime": 7,
+        "follow": 10,
+        "points": 2,
+        "scaling": ["G+2","R+2"]
+    },
+    {
+        "name": "Darkness",
+        "colour": "Z",
+        "prime": 99,
+        "follow": 0,
+        "points": 3,
+        "scaling": []
+    },
+    {
+        "name": "Mimic",
+        "colour": "G",
+        "prime": 5,
+        "follow": 4,
+        "points": 6,
+        "scaling": ["B+1","R+1"]
+    },
+    {
+        "name": "Possessed Sword",
+        "colour": "R",
+        "prime": 7,
+        "follow": 3,
+        "points": 2,
+        "scaling": ["G+5","B-5"]
+    },
+    {
+        "name": "Assassin",
+        "colour": "G",
+        "prime": 2,
+        "follow": 6,
+        "points": 2,
+        "scaling": ["B+2"]
+    },
+    {
+        "name": "Ancient One",
+        "colour": "B",
+        "prime": 12,
+        "follow": 11,
+        "points": -4,
+        "scaling": ["R+3"]
+    },
+    {
+        "name": "Gold Hoarder Dragon",
+        "colour": "R",
+        "prime": 6,
+        "follow": 4,
+        "points": 8,
+        "scaling": ["G+3"]
+    },
+    {
+        "name": "Mermaid",
+        "colour": "B",
+        "prime": 4,
+        "follow": 3,
+        "points": 4,
+        "scaling": ["R+2"]
+    },
+    {
+        "name": "Siren",
+        "colour": "B",
+        "prime": 4,
+        "follow": 5,
+        "points": 1,
+        "scaling": ["G+2","R+1"]
+    },
+    {
+        "name": "Farmer",
+        "colour": "G",
+        "prime": 2,
+        "follow": 0,
+        "points": 1,
+        "scaling": []
+    },
+    {
+        "name": "Fisherman",
+        "colour": "B",
+        "prime": 1,
+        "follow": 0,
+        "points": 1,
+        "scaling": ["R+1"]
+    },
+    {
+        "name": "Ice Drake",
+        "colour": "B",
+        "prime": 7,
+        "follow": 8,
+        "points": 1,
+        "scaling": ["R-3","B+2"]
+    },
+    {
+        "name": "Strategist",
+        "colour": "G",
+        "prime": 0,
+        "follow": 13,
+        "points": 1,
+        "scaling": []
+    },
+    {
+        "name": "Hellhound",
+        "colour": "R",
+        "prime": 6,
+        "follow": 5,
+        "points": -3,
+        "scaling": ["G+3"]
+    },
+    {
+        "name": "Lancer",
+        "colour": "G",
+        "prime": 7,
+        "follow": 2,
+        "points": 2,
+        "scaling": ["R+2"]
+    },
+    {
+        "name": "Divine",
+        "colour": "Z",
+        "prime": 0,
+        "follow": 99,
+        "points": 3,
+        "scaling": []
+    },
+    {
+        "name": "Fire",
+        "colour": "R",
+        "prime": 1,
+        "follow": 1,
+        "points": 1,
+        "scaling": ["G+8"]
+    },
+    {
+        "name": "Water Serpent",
+        "colour": "B",
+        "prime": 8,
+        "follow": 6,
+        "points": 2,
+        "scaling": ["R+3"]
+    },
+    {
+        "name": "Water Spirit",
+        "colour": "B",
+        "prime": 4,
+        "follow": 3,
+        "points": 2,
+        "scaling": ["R+4"]
+    },
+    {
+        "name": "Monk",
+        "colour": "G",
+        "prime": 2,
+        "follow": 1,
+        "points": 2,
+        "scaling": ["R+3"]
+    },
+    {
+        "name": "Wizard",
+        "colour": "B",
+        "prime": 6,
+        "follow": 2,
+        "points": 2,
+        "scaling": ["G+2","B+2"]
+    },
+    {
+        "name": "Water",
+        "colour": "B",
+        "prime": 1,
+        "follow": 1,
+        "points": 1,
+        "scaling": ["R+8"]
+    },
+    {
+        "name": "Archer",
+        "colour": "G",
+        "prime": 3,
+        "follow": 3,
+        "points": 1,
+        "scaling": ["R+1"]
+    },
+    {
+        "name": "Arsonist",
+        "colour": "R",
+        "prime": 9,
+        "follow": 2,
+        "points": -5,
+        "scaling": ["R+4"]
+    },
+    {
+        "name": "Guard",
+        "colour": "R",
+        "prime": 3,
+        "follow": 1,
+        "points": 0,
+        "scaling": ["B+2"]
+    },
+    {
+        "name": "Fish",
+        "colour": "B",
+        "prime": 0,
+        "follow": -1,
+        "points": 0,
+        "scaling": []
+    },
+    {
+        "name": "Rock",
+        "colour": "G",
+        "prime": 0,
+        "follow": 0,
+        "points": 0,
+        "scaling": []
+    }
+]
