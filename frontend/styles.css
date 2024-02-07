@@ -1,0 +1,12 @@
+#card-container {
+    display: flex;
+}
+
+.card {
+    width: 200px; /* Adjust width as needed */
+    height: 300px; /* Adjust height as needed */
+    background-color: #ffffff;
+    border: 1px solid #dddddd;
+    border-radius: 10px;
+    margin-right: 20px; /* Adjust margin between cards */
+}

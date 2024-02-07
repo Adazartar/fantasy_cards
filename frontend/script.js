@@ -1,9 +1,14 @@
 
-const socket = io.connect('http://localhost:8080');
+import { io } from "https://cdn.socket.io/4.4.1/socket.io.esm.min.js"
 
-socket.on('welcome', (message) => {
-    console.log('Received from server:', message);
+console.log("hello")
+
+const socket = io("http://localhost:3000");
+
+socket.on("connect", () => {
+    console.log(`Connected to server with id: ${socket.id}`);
 });
 
-// Send a message to the server
-socket.emit('message', 'Hello, server!');
+socket.on("cards-sent", cards => {
+    console.log(cards)
+})

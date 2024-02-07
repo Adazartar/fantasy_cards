@@ -1,39 +1,23 @@
 
 const express = require('express')
-const socketio = require('socket.io')
-const cors = require('cors')
-const http = require('http')
+const io = require('socket.io')(3000, {
+    cors: {
+        origin: ["http://127.0.0.1:5500"]
+    }
+})
 const fs = require('fs')
 const { Console } = require('console')
 
-const app = express()
-const server = http.createServer(app);
-const io = socketio(server);
-
-const corsOptions = {
-    origin: '*',//'http://127.0.0.1:5500',
-    methods: ['GET', 'POST']
-  };
-
-app.use(cors(corsOptions))
-
+const connected = []
 io.on('connection', (socket) => {
-    console.log('Client connected');
-
-    socket.on('message', (message) => {
-        console.log('Received:', message);
-        // Handle the received message here
-    });
-
-    socket.emit('welcome', 'Welcome to the WebSocket server!');
+    console.log(socket.id, " has joined");
+    connected.push(socket)
+    if(connected.length > 1){
+        playGame(2, connected)
+    }
 });
 
-const PORT = process.env.PORT || 8080;
-server.listen(PORT, () => {
-    console.log(`Server listening on port ${PORT}`);
-});
-
-
+//-------------------------------------------------------------------
 
 function shuffle(deck){
     const new_deck = []
@@ -51,7 +35,6 @@ function getRandomInt(min, max) {
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-
 
 function applyScaling(scaling, field_string, card_colour){
     const field = removeFromField(field_string, card_colour)
@@ -84,20 +67,20 @@ function countOccurrences(str, letter) {
     return count;
 }
 
-//console.log(applyScaling(["B+2","C+3","A+8"], "ABBC","C"))
 function printHands(players){
     for(let i = 0; i < players.length; i++){
         console.log(players[i].hand)
     }
 }
 
-function playGame(num_players){
+function playGame(num_players, sockets){
+    console.log("starting game...")
     fs.readFile("cards.json",'utf-8', (err, data) => {
         const deck = JSON.parse(data) 
         const shuffled_deck = shuffle(deck)
         const players = []
 
-        deal(players, 4, shuffled_deck, num_players)
+        deal(players, 4, shuffled_deck, num_players, sockets)
 
         players[0].first = true
 
@@ -141,26 +124,28 @@ function draw(player, deck, number_cards){
     }
 }
 
-function deal(players, number_cards, shuffled_deck, num_players){
+function deal(players, number_cards, shuffled_deck, num_players, sockets){
     
     if(players.length === 0){
         for(let i = 0; i < num_players; i++){
-            const player = new Player(i)
+            const player = new Player(i, sockets[i])
             players.push(player)
         }
     }
 
     for(let i = 0; i < players.length; i++){
         draw(players[i], shuffled_deck, number_cards)
+        io.to(players[i].socket.id).emit("cards-sent", players[i].hand)
     }
 }
 
 class Player {
-    constructor(player_number) {
+    constructor(player_number, socket) {
       this.player_number = player_number;
       this.hand = [];
       this.cards_won = [];
       this.first = false;
+      this.socket = socket
     }
 }
 
@@ -283,5 +268,3 @@ function sumScore(cards){
     return score
 }
 
-
-//playGame(2)
