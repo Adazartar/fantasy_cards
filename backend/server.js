@@ -8,13 +8,55 @@ const io = require('socket.io')(3000, {
 const fs = require('fs')
 const { Console } = require('console')
 
-const connected = []
+let lobby_num = 0
+const lobbies = []
+let lobby = []
+
 io.on('connection', (socket) => {
+    lobby.push(socket)
     console.log(socket.id, " has joined");
-    connected.push(socket)
-    if(connected.length > 1){
-        playGame(2, connected)
+
+    socket.on('select-option', (num, player_num, lobby_num) => {
+        const lobby = lobbies.find(entry => entry.lobby_num === lobby_num)
+
+        let card = handleCardPlay(player_num, num, lobby)
+    
+        let power = -1
+        if(lobby.player_details.first === true){
+            power = card[0].prime
+        }
+        else{
+            power = card[0].follow
+        }
+    
+        lobby.field.push({
+            "card": card[0],
+            "player_num": player_num,
+            "power": power
+        })
+    
+        for(let i = 0; i < lobby.sockets.length; i++){
+            io.to(lobby.sockets[i].id).emit('update-field', lobby.field)
+        }
+    
+        requestPlay(lobby)
+    })
+
+    
+    if(lobby.length > 1){
+        const snapshot_lobby_num = lobby_num
+        const snapshot_lobby = lobby
+        const new_lobby = {"sockets": snapshot_lobby, "lobby_num": snapshot_lobby_num, "turn_order": [], "player_details": [], "deck": [], "field": []}
+        lobbies.push(new_lobby)
+        lobby = []
+        lobby_num += 1
+
+        for(let i = 0; i < new_lobby.sockets.length; i++){
+            io.to(new_lobby.sockets[i].id).emit('send-lobby-details', new_lobby.lobby_num, i)
+        }
+        startGame(new_lobby)
     }
+
 });
 
 //-------------------------------------------------------------------
@@ -73,45 +115,27 @@ function printHands(players){
     }
 }
 
-function playGame(num_players, sockets){
+function startGame(lobby){
     console.log("starting game...")
     fs.readFile("cards.json",'utf-8', (err, data) => {
         const deck = JSON.parse(data) 
-        const shuffled_deck = shuffle(deck)
-        const players = []
+        lobby.deck = shuffle(deck)
 
-        deal(players, 4, shuffled_deck, num_players, sockets)
+        deal(lobby, 4)
 
-        players[0].first = true
+        lobby.player_details[0].first = true
 
+        console.log(lobby.player_details[0].hand)
+
+        lobby.turn_order = orderPlayers(lobby.player_details)
         
-        while(players[0].hand.length > 0){
-            //printHands(players)
-
-            let turn_order = orderPlayers(players)
-            let field = []
-            requestPlay(players, turn_order, field)
-
-            //console.log("Before field:::")
-            //console.log(field)
-
-            let winner = calculateWinner(field)
-
-            //console.log("After field:::")
-            //console.log(field)
-
-            //console.log("Winner:" + winner)
-
-            resolveRound(players, winner, field)
-
-            if(shuffled_deck.length > num_players){
-                deal(players, 1, shuffled_deck, num_players)
-            }
-        }
-
-        let final_scores = calculateScores(players)
-        //console.log(final_scores)
+        requestPlay(lobby)
     })
+}
+
+function round(lobby){
+    lobby.turn_order = orderPlayers(lobby.player_details)
+    requestPlay(lobby)
 }
 
 function drawCard(player_hand, deck){
@@ -124,74 +148,78 @@ function draw(player, deck, number_cards){
     }
 }
 
-function deal(players, number_cards, shuffled_deck, num_players, sockets){
+function deal(lobby, number_cards){
     
-    if(players.length === 0){
-        for(let i = 0; i < num_players; i++){
-            const player = new Player(i, sockets[i])
-            players.push(player)
+    if(lobby.player_details.length === 0){
+        for(let i = 0; i < lobby.sockets.length; i++){
+            const player = new Player(i)
+            lobby.player_details.push(player)
         }
     }
 
-    for(let i = 0; i < players.length; i++){
-        draw(players[i], shuffled_deck, number_cards)
-        io.to(players[i].socket.id).emit("cards-sent", players[i].hand)
+    for(let i = 0; i < lobby.player_details.length; i++){
+        draw(lobby.player_details[i], lobby.deck, number_cards)
+        io.to(lobby.sockets[i].id).emit("cards-sent", lobby.player_details[i].hand)
     }
 }
 
 class Player {
-    constructor(player_number, socket) {
+    constructor(player_number) {
       this.player_number = player_number;
       this.hand = [];
       this.cards_won = [];
       this.first = false;
-      this.socket = socket
     }
 }
 
 function orderPlayers(players){
     let start_player = findFirst(players)    
 
-    const turnOrder = [];
+    const turn_order = [];
     for (let i = 0; i < players.length; i++) {
         const player_number = (start_player + i) % players.length;
-        turnOrder.push(player_number);
+        turn_order.push(player_number);
     }
-    return turnOrder;
+    return turn_order;
 }
 
-function requestPlay(players, turn_order, field){
-    for(let i = 0; i < players.length; i++){
-        let player_turn = turn_order.shift()
-        let current_player = players.find(player => player.player_number === player_turn)
-        let player_index = players.indexOf(current_player)
+function requestPlay(lobby){
+    // Playing a round
+    if(lobby.turn_order.length > 0){
+        let player_turn = lobby.turn_order.shift()
+        console.log("Requesting card from player ", player_turn)
+        requestCard(player_turn, lobby)
+    }
+    // All turns for round have been exhausted
+    else{
+        let winner = calculateWinner(lobby.field)
 
-        let card_num = requestCard(players, player_index)
-        let card = handleCardPlay(players, player_index, card_num)
+        resolveRound(lobby.player_details, winner, lobby.field)
 
-        let power = -1
-        if(current_player.first === true){
-            power = card[0].prime
+        // More cards to draw
+        if(lobby.deck.length > lobby.player_details.length){
+            deal(lobby, 1)
+            round(lobby)
         }
+        // No cards left in hand
+        else if(lobby.player_details.hand.length === 0){
+            let scores = calculateScores(lobby.player_details)
+        }
+        // No more cards to draw
         else{
-            power = card[0].follow
+            round(lobby)
         }
-
-        field.push({
-            "card": card[0],
-            "player_num": player_index,
-            "power": power
-        })
     }
 }
 
 
-function requestCard(players, player_index){
-    return 0
+function requestCard(player_index, lobby) {
+    // Send a request to the player to play a card
+    io.to(lobby.sockets[player_index].id).emit("request-play");
 }
 
-function handleCardPlay(players, player_index, card_num){
-    return players[player_index].hand.splice(card_num, 1) 
+function handleCardPlay(player_index, card_num, lobby){
+    return lobby.player_details[player_index].hand.splice(card_num, 1) 
 }
 
 function calculateWinner(field){
