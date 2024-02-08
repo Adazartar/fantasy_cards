@@ -125,8 +125,6 @@ function startGame(lobby){
 
         lobby.player_details[0].first = true
 
-        console.log(lobby.player_details[0].hand)
-
         lobby.turn_order = orderPlayers(lobby.player_details)
         
         requestPlay(lobby)
@@ -192,9 +190,12 @@ function requestPlay(lobby){
     }
     // All turns for round have been exhausted
     else{
+        
         let winner = calculateWinner(lobby.field)
 
-        resolveRound(lobby.player_details, winner, lobby.field)
+        resolveRound(lobby, winner)
+
+        lobby.field = []
 
         // More cards to draw
         if(lobby.deck.length > lobby.player_details.length){
@@ -251,15 +252,24 @@ function createFieldString(field){
     return field_string
 }
 
-function resolveRound(players, winner, field){
-    let field_cards = [].concat(...field.map(item => item.card))
-
-    for(let i = 0; i < players.length; i++){
-        if(players[i].player_number === winner){
-            players[i].cards_won = players[i].cards_won.concat(field_cards)
-            players[findFirst(players)].first = false
-            players[i].first = true
-            break
+function resolveRound(lobby, winner){
+    let field_cards = [].concat(...lobby.field.map(item => item.card))
+    if(winner === -1){
+        for(let i = 0; i < lobby.sockets.length; i++){
+            io.to(lobby.sockets[i].id).emit("draw-round")
+        }
+    }
+    else{
+        for(let i = 0; i < lobby.player_details.length; i++){
+            if(lobby.player_details[i].player_number === winner){
+                lobby.player_details[i].cards_won = lobby.player_details[i].cards_won.concat(field_cards)
+                lobby.player_details[findFirst(lobby.player_details)].first = false
+                lobby.player_details[i].first = true
+                io.to(lobby.sockets[i].id).emit("won-round")
+            }
+            else{
+                io.to(lobby.sockets[i].id).emit("lose-round")
+            }
         }
     }
 }

@@ -2,6 +2,12 @@
     display: flex;
 }
 
+#board-container {
+    display: flex;
+    height: 300px;
+    width: 100%;
+}
+
 .card {
     width: 200px; /* Adjust width as needed */
     height: 300px; /* Adjust height as needed */
