@@ -22,7 +22,7 @@ io.on('connection', (socket) => {
         let card = handleCardPlay(player_num, num, lobby)
     
         let power = -1
-        if(lobby.player_details.first === true){
+        if(lobby.player_details[player_num].first === true){
             power = card[0].prime
         }
         else{
