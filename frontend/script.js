@@ -5,6 +5,32 @@ console.log("hello")
 
 const socket = io("http://localhost:3000");
 
+const body = document.body
+
+const indexHTML = `
+    <div>Name: <input type="text" id="name"></div>
+    <br>
+    <div><button onclick="createGame()">Create Game</button></div>
+    <br>
+    <div><input type="text" id="lobby_code"><button onclick="joinGame()">Join Game</button></div>
+    <br>
+    <div id="message_text"></div>
+    `
+
+const waitingHTML = `
+    <div><h1>Waiting for game to start..</h1></div>
+    <div>Lobby number: <a id="lobby_num"></a></div>
+    <div id="players_list"></div>
+    `
+
+const gameHTML = `
+    <div id="player_name"></div>
+    <div id="board-container"></div>
+    <div id="card-container"></div>
+    <div id="round-status"></div>
+    <div id="final-scores"></div>
+`
+
 let lobby_num = -1
 let player_num = -1
 let hand_cards = []
@@ -14,15 +40,19 @@ socket.on("connect", () => {
     console.log(`Connected to server with id: ${socket.id}`);
 });
 
-socket.on("send-lobby-details", (num_l, num_p) => {
+socket.on("send-lobby-details", (num_l, num_p, names) => {
+    console.log("recieved lobby details")
+    body.innerHTML = waitingHTML
     lobby_num = num_l
     player_num = num_p
-    const player_name = document.getElementById('player_name')
-    player_name.innerHTML = ''
-    player_name.innerHTML = `You are Player ${player_num}`
 
-    const final_scores = document.getElementById('final-scores')
-    final_scores.innerHTML = ''
+    const lobby_num_text = document.getElementById('lobby_num')
+    lobby_num_text.innerHTML = num_l
+
+    const players_list = document.getElementById('players_list')
+    names.forEach((name) => {
+        players_list.innerHTML += `${name}<br>`
+    })
     
 })
 
@@ -141,4 +171,36 @@ window.buttonPress = function(num){
     parent.removeChild(cardDiv)
     console.log("selected option: ", num)
     buttonsToggle("off"); // Disable buttons after one is clicked
+}
+
+window.createGame = function(){
+    const name = getName()
+    if (name && name.length < 20){
+        socket.emit("create-lobby", name)
+    }
+    else{
+        const message_text = document.getElementById("message_text")
+        message_text.innerHTML = "Invalid Name"
+    }
+}
+
+window.joinGame = function(){
+    const name = getName()
+    if (name && name.length < 20){
+        const lobby_code = document.getElementById("lobby_code").value
+        socket.emit("join-lobby", name, lobby_code)
+    }
+    else{
+        const message_text = document.getElementById("message_text")
+        message_text.innerHTML += "Invalid Name<br>"
+    }
+}
+
+socket.on("lobby-not-found", () => {
+    const message_text = document.getElementById("message_text")
+    message_text.innerHTML += "Lobby Not Found<br>"
+})
+
+function getName(){
+    return document.getElementById("name").value
 }

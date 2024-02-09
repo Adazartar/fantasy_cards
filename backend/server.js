@@ -10,10 +10,8 @@ const { Console } = require('console')
 
 let lobby_num = 0
 const lobbies = []
-let lobby = []
 
 io.on('connection', (socket) => {
-    lobby.push(socket)
     console.log(socket.id, " has joined");
 
     socket.on('select-option', (num, player_num, lobby_num) => {
@@ -42,7 +40,29 @@ io.on('connection', (socket) => {
         requestPlay(lobby)
     })
 
+    socket.on('create-lobby', (name) => {
+        const snapshot_lobby_num = lobby_num
+        const lobby = {"sockets": [socket], "names": [name], "lobby_num": snapshot_lobby_num, "turn_order": [], "player_details": [], "deck": [], "field": []}
+        lobby_num += 1
+        io.to(lobby.sockets[0].id).emit('send-lobby-details', lobby.lobby_num, 0, lobby.names)
+        lobbies.push(lobby)
+    })
+
+    socket.on('join-lobby', (name, lobby_num) => {
+        const lobby = lobbies.find(entry => entry.lobby_num === Number(lobby_num))
+        if(lobby){
+            lobby.sockets.push(socket)
+            lobby.names.push(name)
+            for(let i = 0; i < lobby.sockets.length; i++){
+                io.to(lobby.sockets[i].id).emit('send-lobby-details', lobby.lobby_num, i, lobby.names)
+            }
+        }
+        else{
+            io.to(socket.id).emit('lobby-not-found')
+        } 
+    })
     
+    /*
     if(lobby.length > 1){
         const snapshot_lobby_num = lobby_num
         const snapshot_lobby = lobby
@@ -56,8 +76,10 @@ io.on('connection', (socket) => {
         }
         startGame(new_lobby)
     }
+    */
 
 });
+
 
 //-------------------------------------------------------------------
 
