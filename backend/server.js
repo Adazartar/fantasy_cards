@@ -109,12 +109,6 @@ function countOccurrences(str, letter) {
     return count;
 }
 
-function printHands(players){
-    for(let i = 0; i < players.length; i++){
-        console.log(players[i].hand)
-    }
-}
-
 function startGame(lobby){
     console.log("starting game...")
     fs.readFile("cards.json",'utf-8', (err, data) => {
@@ -126,6 +120,10 @@ function startGame(lobby){
         lobby.player_details[0].first = true
 
         lobby.turn_order = orderPlayers(lobby.player_details)
+
+        for(let i = 0; i < lobby.player_details.length; i++){
+            io.to(lobby.sockets[i].id).emit("cards-sent", lobby.player_details[i].hand)
+        }
         
         requestPlay(lobby)
     })
@@ -157,7 +155,6 @@ function deal(lobby, number_cards){
 
     for(let i = 0; i < lobby.player_details.length; i++){
         draw(lobby.player_details[i], lobby.deck, number_cards)
-        io.to(lobby.sockets[i].id).emit("cards-sent", lobby.player_details[i].hand)
     }
 }
 
@@ -200,19 +197,27 @@ function requestPlay(lobby){
         // More cards to draw
         if(lobby.deck.length > lobby.player_details.length){
             deal(lobby, 1)
+            for(let i = 0; i < lobby.player_details.length; i++){
+                io.to(lobby.sockets[i].id).emit("cards-sent", lobby.player_details[i].hand)
+            }
             round(lobby)
         }
         // No cards left in hand
-        else if(lobby.player_details.hand.length === 0){
+        else if(lobby.player_details[0].hand.length === 0){
             let scores = calculateScores(lobby.player_details)
+            for(let i = 0; i < lobby.player_details.length; i++){
+                io.to(lobby.sockets[i].id).emit("send-scores", scores)
+            }
         }
         // No more cards to draw
         else{
+            for(let i = 0; i < lobby.player_details.length; i++){
+                io.to(lobby.sockets[i].id).emit("cards-sent", lobby.player_details[i].hand)
+            }
             round(lobby)
         }
     }
 }
-
 
 function requestCard(player_index, lobby) {
     // Send a request to the player to play a card

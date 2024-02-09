@@ -7,7 +7,8 @@ const socket = io("http://localhost:3000");
 
 let lobby_num = -1
 let player_num = -1
-let current_cards = []
+let hand_cards = []
+let field_cards = []
 
 socket.on("connect", () => {
     console.log(`Connected to server with id: ${socket.id}`);
@@ -16,6 +17,13 @@ socket.on("connect", () => {
 socket.on("send-lobby-details", (num_l, num_p) => {
     lobby_num = num_l
     player_num = num_p
+    const player_name = document.getElementById('player_name')
+    player_name.innerHTML = ''
+    player_name.innerHTML = `You are Player ${player_num}`
+
+    const final_scores = document.getElementById('final-scores')
+    final_scores.innerHTML = ''
+    
 })
 
 socket.on("cards-sent", cards => {
@@ -105,6 +113,13 @@ socket.on("draw-round", () => {
         const cardContainer = document.getElementById('board-container')
         cardContainer.innerHTML = ''
     }, 3000);
+})
+
+socket.on("send-scores", (scores) => {
+    const final_scores = document.getElementById('final-scores')
+    for(let i = 0; i < scores.length; i++){
+        final_scores.innerHTML += `Player ${scores[i].player}: ${scores[i].score}<br>`
+    }
 })
 
 function buttonsToggle(option) {

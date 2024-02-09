@@ -1,11 +1,19 @@
 #card-container {
     display: flex;
+    height: 300px;
+    width: 100%;
+    border: 1px solid black;
+    border-radius: 5px;
+    margin: 2px;
 }
 
 #board-container {
     display: flex;
     height: 300px;
     width: 100%;
+    border: 1px solid black;
+    border-radius: 5px;
+    margin: 2px;
 }
 
 .card {
