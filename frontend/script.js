@@ -21,6 +21,8 @@ const waitingHTML = `
     <div><h1>Waiting for game to start..</h1></div>
     <div>Lobby number: <a id="lobby_num"></a></div>
     <div id="players_list"></div>
+    <br>
+    <div><button onclick="startGame()">Start Game</button></div>
     `
 
 const gameHTML = `
@@ -196,9 +198,19 @@ window.joinGame = function(){
     }
 }
 
+window.startGame = function(){
+    socket.emit("start-game", lobby_num)
+}
+
 socket.on("lobby-not-found", () => {
     const message_text = document.getElementById("message_text")
     message_text.innerHTML += "Lobby Not Found<br>"
+})
+
+socket.on("game-starting", (names) => {
+    body.innerHTML = gameHTML
+    const player_name = document.getElementById('player_name')
+    player_name.innerHTML = `${names[player_num]}`
 })
 
 function getName(){
