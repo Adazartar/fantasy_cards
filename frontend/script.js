@@ -147,11 +147,14 @@ socket.on("draw-round", () => {
     }, 3000);
 })
 
-socket.on("send-scores", (scores) => {
+socket.on("send-scores", (scores, names) => {
     const final_scores = document.getElementById('final-scores')
     for(let i = 0; i < scores.length; i++){
-        final_scores.innerHTML += `Player ${scores[i].player}: ${scores[i].score}<br>`
+        final_scores.innerHTML += `${names[i]}: ${scores[i].score}<br>`
     }
+    final_scores.innerHTML += `<br><button onclick="exitGame()">Exit Game</button>`
+    player_num = -1
+    lobby_num = -1
 })
 
 function buttonsToggle(option) {
@@ -202,6 +205,10 @@ window.startGame = function(){
     socket.emit("start-game", lobby_num)
 }
 
+window.exitGame = function(){
+    body.innerHTML = indexHTML
+}
+
 socket.on("lobby-not-found", () => {
     const message_text = document.getElementById("message_text")
     message_text.innerHTML += "Lobby Not Found<br>"
@@ -211,6 +218,12 @@ socket.on("game-starting", (names) => {
     body.innerHTML = gameHTML
     const player_name = document.getElementById('player_name')
     player_name.innerHTML = `${names[player_num]}`
+})
+
+socket.on('end-game-early', () => {
+    body.innerHTML = indexHTML
+    player_num = -1
+    lobby_num = -1
 })
 
 function getName(){

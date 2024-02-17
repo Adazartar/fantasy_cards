@@ -70,23 +70,50 @@ io.on('connection', (socket) => {
         lobby.in_game = true
         startGame(lobby)
     })
-    
-    /*
-    if(lobby.length > 1){
-        const snapshot_lobby_num = lobby_num
-        const snapshot_lobby = lobby
-        const new_lobby = {"sockets": snapshot_lobby, "lobby_num": snapshot_lobby_num, "turn_order": [], "player_details": [], "deck": [], "field": []}
-        lobbies.push(new_lobby)
-        lobby = []
-        lobby_num += 1
 
-        for(let i = 0; i < new_lobby.sockets.length; i++){
-            io.to(new_lobby.sockets[i].id).emit('send-lobby-details', new_lobby.lobby_num, i)
+    socket.on('disconnect', () => {
+        let lobby_num = -1
+        let player_num = -1
+        let lobby = null
+        outerLoop: for(let i = 0; i < lobbies.length; i++){
+            for(let j = 0; j < lobbies[i].sockets.length; j++){
+                if(lobbies[i].sockets[j].id === socket.id){
+                    lobby_num = lobbies[i].lobby_num
+                    player_num = j
+                    lobby = lobbies[i]
+                    break outerLoop;
+                }
+            }
         }
-        startGame(new_lobby)
-    }
-    */
 
+        console.log(`Socket ${socket.id} disconnected from lobby ${lobby_num}`);
+        if(lobby && lobby.in_game){
+            for(let i = 0; i < lobby.sockets.length; i++){
+                io.to(lobby.sockets[i].id).emit('end-game-early')
+            }
+            const indexToRemove = lobbies.findIndex(entry => entry.lobby_num === lobby_num)
+            lobbies.splice(indexToRemove, 1)
+            console.log(`lobby ${lobby_num} has closed`)
+        }
+        else if(lobby){
+            lobby.sockets.splice(player_num, 1)
+            lobby.names.splice(player_num, 1)
+            if(lobby.sockets.length > 0){
+                for(let i = 0; i < lobby.sockets.length; i++){
+                    io.to(lobby.sockets[i].id).emit('send-lobby-details', lobby.lobby_num, i, lobby.names)
+                }
+            }
+            else{
+                const indexToRemove = lobbies.findIndex(entry => entry.lobby_num === lobby_num)
+                lobbies.splice(indexToRemove, 1)
+                console.log(`lobby ${lobby_num} has closed`)
+            }
+        }
+        else{
+            console.log("Lobby not found")
+        }
+    });
+    
 });
 
 
@@ -230,21 +257,28 @@ function requestPlay(lobby){
             for(let i = 0; i < lobby.player_details.length; i++){
                 io.to(lobby.sockets[i].id).emit("cards-sent", lobby.player_details[i].hand)
             }
-            round(lobby)
+            setTimeout(() => {
+                round(lobby);
+            }, 3000);
         }
         // No cards left in hand
         else if(lobby.player_details[0].hand.length === 0){
             let scores = calculateScores(lobby.player_details)
             for(let i = 0; i < lobby.player_details.length; i++){
-                io.to(lobby.sockets[i].id).emit("send-scores", scores)
+                io.to(lobby.sockets[i].id).emit("send-scores", scores, lobby.names)
             }
+            const indexToRemove = lobbies.findIndex(entry => entry.lobby_num === lobby_num)
+            lobbies.splice(indexToRemove, 1)
+            console.log(`lobby ${lobby_num} has closed`)
         }
         // No more cards to draw
         else{
             for(let i = 0; i < lobby.player_details.length; i++){
                 io.to(lobby.sockets[i].id).emit("cards-sent", lobby.player_details[i].hand)
             }
-            round(lobby)
+            setTimeout(() => {
+                round(lobby);
+            }, 3000);
         }
     }
 }
