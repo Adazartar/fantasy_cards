@@ -59,13 +59,15 @@ socket.on("send-lobby-details", (num_l, num_p, names) => {
 })
 
 socket.on("cards-sent", cards => {
+    hand_cards = Array.from(cards)
     const cardContainer = document.getElementById('card-container')
     cardContainer.innerHTML = ''
 
     for(let i = 0; i < cards.length; i++) {
         const cardDiv = document.createElement('div');
         cardDiv.classList.add('card');
-        cardDiv.id = `card${i}`;
+        cardDiv.classList.add('hand_card');
+        cardDiv.id = `hand_card${i}`;
 
         const cardText = document.createElement('div')
         cardText.innerHTML = `
@@ -74,7 +76,8 @@ socket.on("cards-sent", cards => {
         Prime: ${cards[i].prime}<br>
         Follow: ${cards[i].follow}<br>
         Scaling: ${cards[i].scaling}<br>
-        Points: ${cards[i].points}<br>
+        Points: ${cards[i].points}<br><br>
+        Current Power: <div class="card_pow">${handPowCalc(i)}<div>
         `
         const button = document.createElement('button');
         button.textContent = `card ${i}`;
@@ -84,6 +87,7 @@ socket.on("cards-sent", cards => {
         cardDiv.appendChild(cardText);
         cardContainer.appendChild(cardDiv);
     }
+    addCardHover()
 })
 
 socket.on("request-play", () => {
@@ -92,13 +96,16 @@ socket.on("request-play", () => {
 });
 
 socket.on("update-field", (field) => {
-    console.log(field)
+    field_cards = Array.from(field)
+    updateHandCards()
     const cardContainer = document.getElementById('board-container')
     cardContainer.innerHTML = ''
 
     for(let i = 0; i < field.length; i++) {
         const cardDiv = document.createElement('div');
-        cardDiv.classList.add('card');
+        cardDiv.classList.add(`card`);
+        cardDiv.classList.add(`board_card`);
+        cardDiv.id = `board_card${i}`
 
         const cardText = document.createElement('div')
         cardText.innerHTML = `
@@ -107,7 +114,8 @@ socket.on("update-field", (field) => {
         Prime: ${field[i].card.prime}<br>
         Follow: ${field[i].card.follow}<br>
         Scaling: ${field[i].card.scaling}<br>
-        Points: ${field[i].card.points}<br>
+        Points: ${field[i].card.points}<br><br>
+        Current Power: <div class="card_pow">${boardPowCalc(i, field_cards)}<div>
         `
         cardDiv.appendChild(cardText);
         cardContainer.appendChild(cardDiv);
@@ -122,6 +130,8 @@ socket.on("won-round", () => {
         round_status.innerHTML = '';
         const cardContainer = document.getElementById('board-container')
         cardContainer.innerHTML = ''
+        field_cards = Array.from([])
+        updateHandCards()
     }, 3000);
 })
 
@@ -133,6 +143,8 @@ socket.on("lose-round", () => {
         round_status.innerHTML = '';
         const cardContainer = document.getElementById('board-container')
         cardContainer.innerHTML = ''
+        field_cards = Array.from([])
+        updateHandCards()
     }, 3000);
 })
 
@@ -144,6 +156,8 @@ socket.on("draw-round", () => {
         round_status.innerHTML = '';
         const cardContainer = document.getElementById('board-container')
         cardContainer.innerHTML = ''
+        field_cards = Array.from([])
+        updateHandCards()
     }, 3000);
 })
 
@@ -171,11 +185,12 @@ function buttonsToggle(option) {
 
 window.buttonPress = function(num){
     socket.emit("select-option", num, player_num, lobby_num);
-    const cardDiv = document.getElementById(`card${num}`)
+    const cardDiv = document.getElementById(`hand_card${num}`)
     const parent = cardDiv.parentNode
     parent.removeChild(cardDiv)
     console.log("selected option: ", num)
     buttonsToggle("off"); // Disable buttons after one is clicked
+    updateHandCards()
 }
 
 window.createGame = function(){
@@ -228,4 +243,111 @@ socket.on('end-game-early', () => {
 
 function getName(){
     return document.getElementById("name").value
+}
+
+function handPowCalc(card_num){
+    if(field_cards.length == 0){
+        return hand_cards[card_num].prime
+    }
+    else{
+        return hand_cards[card_num].follow
+    }
+}
+
+function boardPowCalc(card_num, field_cards){
+    const field_string = createFieldString(field_cards)
+    let pow = -1
+
+    if(card_num == 0){
+        pow = field_cards[card_num].card.prime
+    }
+    else{
+        pow = field_cards[card_num].card.follow
+    }
+
+    pow += applyScaling(field_cards[card_num].card.scaling, field_string, field_cards[card_num].card.colour)
+    return pow
+    
+}
+
+function applyScaling(scaling, field_string, card_colour){
+    const field = removeFromField(field_string, card_colour)
+    let power_incr = 0
+    for(let i = 0; i < scaling.length; i++){
+        const match = scaling[i].match(/([A-Za-z])([+-]?\d+)/);
+        const colour = match[1]
+        const number = parseInt(match[2], 10)
+        power_incr += number*countOccurrences(field, colour)
+    }
+    return power_incr
+}
+
+function removeFromField(field_string, card_colour){
+    let new_field_string = field_string.split('')
+    for(let i = 0; i < card_colour.length; i++){
+        const index = new_field_string.indexOf(card_colour[i])
+        new_field_string.splice(index, 1)
+    }
+    return new_field_string
+}
+
+function countOccurrences(str, letter) {
+    let count = 0;
+    for (let i = 0; i < str.length; i++) {
+        if (str[i] === letter) {
+            count++;
+        }
+    }
+    return count;
+}
+
+function createFieldString(field){
+    let field_string = ''
+    for(let i = 0; i < field.length; i++){
+        field_string += field[i].card.colour
+    }
+    return field_string
+}
+
+
+function addCardHover(){
+    const hand_cards_elems = document.querySelectorAll('.hand_card');
+
+    hand_cards_elems.forEach(hand_card_elem => {
+        hand_card_elem.addEventListener('mouseenter', () => {
+            const cardIndex = parseInt(hand_card_elem.id.replace('hand_card', ''), 10);
+            const obj = {"card": hand_cards[cardIndex]}
+            const test_field_cards = Array.from(field_cards)
+            test_field_cards.push(obj)
+            updateBoardCards(test_field_cards)
+            const card_pow_text = hand_card_elem.getElementsByClassName('card_pow')[0]
+            const field_string = createFieldString(test_field_cards)
+            card_pow_text.innerHTML = `${handPowCalc(cardIndex) + applyScaling(hand_cards[cardIndex].scaling, field_string, hand_cards[cardIndex].colour)}`
+        });
+
+        hand_card_elem.addEventListener('mouseleave', () => {
+            const cardIndex = parseInt(hand_card_elem.id.replace('hand_card', ''), 10);
+            const card_pow_text = hand_card_elem.getElementsByClassName('card_pow')[0]
+            card_pow_text.innerHTML = `${handPowCalc(cardIndex)}`
+            updateBoardCards(field_cards)
+        });
+    });
+}
+
+function updateBoardCards(field_cards){
+    const board_cards_elems = document.querySelectorAll('.board_card')
+    board_cards_elems.forEach(board_card_elem => {
+        const card_pow_text = board_card_elem.getElementsByClassName('card_pow')[0]
+        const cardIndex = parseInt(board_card_elem.id.replace('board_card', ''), 10);
+        card_pow_text.innerHTML = `${boardPowCalc(cardIndex, field_cards)}`
+    })
+}
+
+function updateHandCards(){
+    const hand_cards_elems = document.querySelectorAll('.hand_card')
+    hand_cards_elems.forEach(hand_card_elem => {
+        const card_pow_text = hand_card_elem.getElementsByClassName('card_pow')[0]
+        const cardIndex = parseInt(hand_card_elem.id.replace('hand_card', ''), 10);
+        card_pow_text.innerHTML = `${handPowCalc(cardIndex)}`
+    })
 }
